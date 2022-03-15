@@ -23,7 +23,7 @@ class App:
         btn_quit.grid(column=0, row=0)
         # Capturing video
 
-        self.delay = 15
+        self.delay = 25
         self.update()
         self.window.mainloop()
 
