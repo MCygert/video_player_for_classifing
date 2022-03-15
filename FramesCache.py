@@ -1,5 +1,3 @@
-
-
 class FramesCache:
     """
     Simple implementation of circular queue.
@@ -12,29 +10,28 @@ class FramesCache:
     flag circled is needed because on first `circle` tail doesn't need to updated.
     But after this it needs to increment same as head.
     """
+
     def __init__(self, size):
-        self.size = size
-        self.queue = []
+        self.size = int(size)
+        self.queue = [None] * self.size
         self.head = 0
         self.tail = 1
         self.circled = False
 
     def append(self, frame):
         self.queue[self.head] = frame
-        if self.head is self.size:
+
+        if self.circled:
+            if self.tail is self.size - 1:
+                self.tail = 0
+            else:
+                self.tail += 1
+
+        if self.head is self.size - 1:
             self.head = 0
             self.circled = True
         else:
             self.head += 1
 
-        if self.circled:
-            if self.tail is self.size:
-                self.tail = 0
-            else:
-                self.tail += 1
-
     def dump(self):
-        from_tail_to_max_size = self.size - self.tail
-        # self.queue[self.tail: ]
-
-
+        return self.queue[self.tail - 1:self.size] + self.queue[0: self.head]

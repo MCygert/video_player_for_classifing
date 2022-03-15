@@ -1,8 +1,11 @@
 import tkinter
 import tkinter as ttk, threading
+import datetime
+import os
 
 import PIL.ImageTk
 import cv2
+from FramesCache import FramesCache
 
 
 class App:
@@ -13,6 +16,16 @@ class App:
         self.window.columnconfigure(1, minsize=300)
         self.window.rowconfigure(1, minsize=300)
         self.vid = MyVideoCapture(video_source)
+        self._number_of_frames = self.vid.fps * 5
+        self.cache = FramesCache(self._number_of_frames)
+
+        btn_pass = ttk.Button(text="Pass", command= lambda: self.save_video("pass"))
+        btn_pass.grid(column=1, row=2)
+        btn_shot = ttk.Button(text="Shot")
+        btn_shot.grid(column=2, row=2)
+        btn_save = ttk.Button(text="Save")
+        btn_save.grid(column=3, row=2)
+
 
         self.canvas = tkinter.Canvas(self.window, width=self.vid.width, height=self.vid.height)
         self.canvas.grid(column=0, row=1, sticky='nsew')
@@ -30,13 +43,29 @@ class App:
     def update(self):
         ret, frame = self.vid.get_frame()
         if ret:
+            self.cache.append(frame)
             self.photo = PIL.ImageTk.PhotoImage(image=PIL.Image.fromarray(frame))
             self.canvas.create_image(0, 0, image=self.photo, anchor=tkinter.NW)
         self.window.after(self.delay, self.update)
 
-
-    def cut_video(self):
-        _number_of_frames = self.vid.fps * 2.5
+    def save_video(self, label):
+        time = datetime.datetime.now()
+        root_path = "data"
+        os.makedirs(root_path, exist_ok=True)
+        if label == "pass":
+            path = root_path + "/pass/"
+            os.makedirs(path, exist_ok=True)
+        if label == "shot":
+            path = root_path + "/shot/"
+            os.makedirs(path, exist_ok=True)
+        if label == "save":
+            path = root_path + "/save/"
+            os.makedirs(path, exist_ok=True)
+        print(path + str(time) + ".mp4")
+        out = cv2.VideoWriter(path + str(time) + ".mp4", cv2.VideoWriter_fourcc(*'mp4v'), 30, (720, 1080))
+        for frame in self.cache.dump():
+            out.write(frame)
+        out.release()
 
 
 
@@ -53,7 +82,6 @@ class MyVideoCapture:
     def __del__(self):
         if self.vid.isOpened():
             self.vid.release()
-        self.window.mainloop()
 
     def get_frame(self):
         if self.vid.isOpened():
